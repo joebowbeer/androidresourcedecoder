@@ -200,7 +200,7 @@ public class ResourceDecoder {
             dataRead++;
         }
         int nbytes = in.readUnsignedByte();
-        dataRead += 1;
+        dataRead++;
         if ((nbytes & 0x80) != 0) {
             nbytes = ((nbytes & 0x7F) << 8) | in.readUnsignedByte();
             dataRead++;
@@ -209,8 +209,8 @@ public class ResourceDecoder {
         in.readFully(data);
         dataRead += data.length;
         int z1 = in.readUnsignedByte();
-        assert z1 == 0; // check null termination
         dataRead++;
+        assert z1 == 0; // check null termination
         String s = new String(data, "UTF-8");
         assert nchars == s.length();
         list.add(s);
