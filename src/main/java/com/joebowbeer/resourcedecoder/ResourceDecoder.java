@@ -195,13 +195,13 @@ public class ResourceDecoder {
             throws IOException {
         int nchars = in.readUnsignedByte();
         int dataRead = 1;
-        if ((nchars & 0x80) != 0) {
+        if ((nchars & 0x80) != 0) { // TODO: only 2 bytes?
             nchars = ((nchars & 0x7F) << 8) | in.readUnsignedByte();
             dataRead++;
         }
         int nbytes = in.readUnsignedByte();
         dataRead++;
-        if ((nbytes & 0x80) != 0) {
+        if ((nbytes & 0x80) != 0) { // TODO: only 2 bytes?
             nbytes = ((nbytes & 0x7F) << 8) | in.readUnsignedByte();
             dataRead++;
         }
