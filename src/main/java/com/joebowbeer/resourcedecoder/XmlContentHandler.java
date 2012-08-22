@@ -14,7 +14,7 @@ public class XmlContentHandler extends ContentFilter {
 
     protected Element curNode;
     protected StringPool pool;
-    protected final List<List<String>> namespaces = new ArrayList<List<String>>();
+    protected final List<List<String>> namespaces = new ArrayList<>();
     protected String attrNamespace;
     protected String attrName;
 

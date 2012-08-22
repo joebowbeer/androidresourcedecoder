@@ -16,6 +16,7 @@ public class XmlContentToDocument extends XmlContentHandler implements DocumentB
 
     /* DocumentBuilder */
 
+    @Override
     public Document toDocument() {
         return document;
     }
