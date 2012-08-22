@@ -160,7 +160,7 @@ public class ResourceDecoder {
             styleOffset[i] = in.readInt();
         }
         dataRead += styleCount * 4;
-        List<String> strings = new ArrayList<String>(stringCount);
+        List<String> strings = new ArrayList<>(stringCount);
         for (int i = 0; i < stringCount; i++) {
             if (stringOffset[i] != headerSize + dataRead - stringsStart) {
                 // Have we seen this offset before?
@@ -175,7 +175,7 @@ public class ResourceDecoder {
             }
         }
         assert (styleCount == 0) == (stylesStart == 0);
-        List<Style> styles = new ArrayList<Style>(styleCount);
+        List<Style> styles = new ArrayList<>(styleCount);
         if (styleCount != 0) {
             // skip to start
             int npad = stylesStart - headerSize - dataRead;
@@ -414,7 +414,7 @@ public class ResourceDecoder {
             ResourceInputStream in) throws IOException {
         in.skipFully(headerSize - HSIZE);
         int entryCount = (totalSize - headerSize) / 4;
-        Map<Integer, Integer> map = new HashMap<Integer, Integer>(entryCount);
+        Map<Integer, Integer> map = new HashMap<>(entryCount);
         for (int i = 0; i < entryCount; i++) {
             map.put(in.readInt(), i);
         }

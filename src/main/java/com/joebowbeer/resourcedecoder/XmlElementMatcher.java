@@ -15,13 +15,13 @@ import java.util.Set;
  */
 public class XmlElementMatcher extends XmlContentHandler {
 
-    private final Set<XmlElementSelector> selectors = new HashSet<XmlElementSelector>();
+    private final Set<XmlElementSelector> selectors = new HashSet<>();
 
-    private final Deque<Chunk> chunks = new ArrayDeque<Chunk>();
+    private final Deque<Chunk> chunks = new ArrayDeque<>();
 
-    private final Set<Chunk> changes = new HashSet<Chunk>();
+    private final Set<Chunk> changes = new HashSet<>();
 
-    private Deque<Long> startElementOffsetStack = new ArrayDeque<Long>();
+    private Deque<Long> startElementOffsetStack = new ArrayDeque<>();
 
     public XmlElementMatcher(Iterable<String> patterns) {
         addSelectors(patterns);

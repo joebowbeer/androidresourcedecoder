@@ -21,6 +21,7 @@ public class ContentFilter implements ContentHandler {
         this.parent = parent;
     }
 
+    @Override
     public void onChunkStart(long offset, int type, int headerSize, int totalSize) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -28,6 +29,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onResourceValue(long offset, ResourceValue value) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -35,6 +37,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onStringPool(StringPool stringPool) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -42,6 +45,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableStart(int packageCount) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -49,6 +53,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -56,6 +61,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTablePackageStart(int id, String name, int typeStrings,
             int lastPublicType, int keyStrings, int lastPublicKey) {
         ContentHandler next = getParent();
@@ -65,6 +71,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTablePackageEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -72,6 +79,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableTypeSpecStart(int id, int[] configs) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -79,6 +87,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableTypeSpecEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -86,6 +95,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableTypeStart(int id, ResourceConfig config, int entryCount,
             int entryStart, int[] offsets) {
         ContentHandler next = getParent();
@@ -94,6 +104,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableTypeEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -101,6 +112,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableEntryStart(int id, int flags, int key, int parent,
             int count) {
         ContentHandler next = getParent();
@@ -109,6 +121,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableEntryMapName(int name) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -116,6 +129,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onTableEntryEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -123,6 +137,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlStart() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -130,6 +145,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlEnd() {
         ContentHandler next = getParent();
         if (next != null) {
@@ -137,6 +153,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlResourceMap(Map<Integer, Integer> map) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -144,6 +161,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlNode(int lineNumber, int comment) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -151,6 +169,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlStartNamespace(int prefixIndex, int uriIndex) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -158,6 +177,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlEndNamespace(int prefixIndex, int uriIndex) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -165,6 +185,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlStartElement(int nsIndex, int nameIndex, int attrIndex,
             int attrSize, int attrCount, int idIndex, int classIndex, int styleIndex) {
         ContentHandler next = getParent();
@@ -174,6 +195,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlEndElement(int nsIndex, int nameIndex) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -181,6 +203,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlAttribute(int nsIndex, int nameIndex, int rawIndex) {
         ContentHandler next = getParent();
         if (next != null) {
@@ -188,6 +211,7 @@ public class ContentFilter implements ContentHandler {
         }
     }
 
+    @Override
     public void onXmlCData(int cdataIndex) {
         ContentHandler next = getParent();
         if (next != null) {

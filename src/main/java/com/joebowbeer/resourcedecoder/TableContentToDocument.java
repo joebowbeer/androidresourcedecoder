@@ -42,6 +42,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
 
     /* DocumentBuilder */
 
+    @Override
     public Document toDocument() {
         return document;
     }
@@ -146,23 +147,27 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         if (!isComplexEntry) {
             curNode.addAttribute(new Attribute("value", value.format(pool)));
         } else {
-            if ("attr".equals(restypeName)) {
-                curNode.appendChild(attrValueElement(entryMapName, value));
-            } else if ("array".equals(restypeName)) {
-                assert isArrayId(entryMapName);
-                Element elementNode = new Element("element");
-                elementNode.addAttribute(new Attribute(
-                        "index", String.valueOf(getEntry(entryMapName))));
-                elementNode.addAttribute(new Attribute(
-                        "value", value.format(pool)));
-                curNode.appendChild(elementNode);
-            } else {
-                Element valueNode = new Element("value");
-                valueNode.addAttribute(new Attribute(
-                        "name", String.format("@%#08x", entryMapName)));
-                valueNode.addAttribute(new Attribute(
-                        "value", value.format(pool))); // TODO?
-                curNode.appendChild(valueNode);
+            switch (restypeName) {
+                case "attr":
+                    curNode.appendChild(attrValueElement(entryMapName, value));
+                    break;
+                case "array":
+                    assert isArrayId(entryMapName);
+                    Element elementNode = new Element("element");
+                    elementNode.addAttribute(new Attribute(
+                            "index", String.valueOf(getEntry(entryMapName))));
+                    elementNode.addAttribute(new Attribute(
+                            "value", value.format(pool)));
+                    curNode.appendChild(elementNode);
+                    break;
+                default:
+                    Element valueNode = new Element("value");
+                    valueNode.addAttribute(new Attribute(
+                            "name", String.format("@%#08x", entryMapName)));
+                    valueNode.addAttribute(new Attribute(
+                            "value", value.format(pool))); // TODO?
+                    curNode.appendChild(valueNode);
+                    break;
             }
         }
         super.onResourceValue(offset, value);

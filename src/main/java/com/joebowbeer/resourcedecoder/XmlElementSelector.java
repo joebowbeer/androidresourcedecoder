@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import nu.xom.Attribute;
 import nu.xom.Element;
 
@@ -22,7 +23,7 @@ public class XmlElementSelector {
 
     public final String elementName;
 
-    public final Map<String, String> attributes = new HashMap<String, String>();
+    public final Map<String, String> attributes = new HashMap<>();
 
     public XmlElementSelector(String pattern) {
         Iterator<String> iter = Arrays.asList(pattern.split("\\[|\\]")).iterator();
@@ -66,7 +67,7 @@ public class XmlElementSelector {
         if (!elementName.equals(node.getQualifiedName())) {
             return false;
         }
-        Map<String, String> map = new HashMap<String, String>(attributes);
+        Map<String, String> map = new HashMap<>(attributes);
         for (int i = 0, n = node.getAttributeCount(); i < n; i++) {
             Attribute attr = node.getAttribute(i);
             String name = attr.getQualifiedName();
