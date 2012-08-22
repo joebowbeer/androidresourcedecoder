@@ -1,7 +1,15 @@
 package com.joebowbeer.resourcedecoder;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import nu.xom.Attribute;
+import nu.xom.Document;
+import nu.xom.Element;
+
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_FEW;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_L10N;
+import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_L10N_NOT_REQUIRED;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_MANY;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_MAX;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_MIN;
@@ -14,24 +22,23 @@ import static com.joebowbeer.resourcedecoder.ResourceUtils.getEntry;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isArrayId;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isPublicEntry;
-import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_L10N_NOT_REQUIRED;
-
-import nu.xom.Attribute;
-import nu.xom.Document;
-import nu.xom.Element;
 
 public class TableContentToDocument extends ContentFilter implements DocumentBuilder {
 
     private Document document;
     private Element curNode;
     private StringPool pool;
-    private boolean hasTypePool;
-    private boolean hasKeyPool;
     private StringPool typePool;
     private StringPool keyPool;
+    private boolean hasTypePool;
+    private boolean hasKeyPool;
+    private int packageId;
+    private String packageName;
+    private int restypeId;
     private String restypeName;
     private boolean isComplexEntry;
     private int entryMapName;
+    private Map<Integer, String> resourceNames;
 
     public TableContentToDocument() {
     }
@@ -53,6 +60,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     public void onTableStart(int packageCount) {
         document = null;
         curNode = new Element("packages");
+        resourceNames = new HashMap<>();
         super.onTableStart(packageCount);
     }
 
@@ -79,22 +87,22 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     public void onTablePackageStart(int id, String name, int typeStrings,
             int lastPublicType, int keyStrings, int lastPublicKey) {
         Element packageNode = new Element("package");
-        packageNode.addAttribute(
-                new Attribute("id", String.format("%#x", id)));
+        packageNode.addAttribute(new Attribute("id", String.format("%#x", id)));
         packageNode.addAttribute(new Attribute("name", name));
+        packageId = id;
+        packageName = name;
         hasTypePool = typeStrings != 0;
         hasKeyPool = keyStrings != 0;
         curNode.appendChild(packageNode);
         curNode = packageNode;
-        super.onTablePackageStart(id, name, typeStrings, lastPublicType,
-                keyStrings, lastPublicKey);
+        super.onTablePackageStart(id, name, typeStrings, lastPublicType, keyStrings, lastPublicKey);
     }
 
     @Override
     public void onTableTypeSpecStart(int id, int[] configs) {
         Element restypeNode = new Element("resourcetype");
-        restypeNode.addAttribute(
-                new Attribute("id", String.format("%#x", id)));
+        restypeId = id;
+        restypeNode.addAttribute(new Attribute("id", String.format("%#x", id)));
         restypeName = typePool.getString(curNode.getChildCount());
         restypeNode.addAttribute(new Attribute("name", restypeName));
         // ignore fast-lookup configs table
@@ -113,19 +121,20 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     }
 
     @Override
-    public void onTableEntryStart(int id, int flags, int key, int parent,
-            int count) {
+    public void onTableEntryStart(int id, int flags, int key, int parent, int count) {
+        String itemName = keyPool.getString(key);
         Element itemNode = new Element("item");
         itemNode.addAttribute(new Attribute("id", String.format("%#x", id)));
-        itemNode.addAttribute(new Attribute("name", keyPool.getString(key)));
+        itemNode.addAttribute(new Attribute("name", itemName));
         isComplexEntry = isComplexEntry(flags);
         if (isPublicEntry(flags)) {
             itemNode.addAttribute(new Attribute("ispublic", "true"));
         }
         if (parent != 0) {
-            itemNode.addAttribute(new Attribute("parentref",
-                    String.format("@%#08x", parent)));
+            itemNode.addAttribute(new Attribute("parentref", parentName(parent)));
         }
+        int resId = ResourceUtils.makeId(packageId - 1, restypeId - 1, id);
+        resourceNames.put(resId, itemName);
         curNode.appendChild(itemNode);
         curNode = itemNode;
         super.onTableEntryStart(id, flags, key, parent, count);
@@ -145,7 +154,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
             return;
         }
         if (!isComplexEntry) {
-            curNode.addAttribute(new Attribute("value", value.format(pool)));
+            curNode.addAttribute(new Attribute("value", formatValue(value)));
         } else {
             switch (restypeName) {
                 case "attr":
@@ -154,18 +163,15 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                 case "array":
                     assert isArrayId(entryMapName);
                     Element elementNode = new Element("element");
-                    elementNode.addAttribute(new Attribute(
-                            "index", String.valueOf(getEntry(entryMapName))));
-                    elementNode.addAttribute(new Attribute(
-                            "value", value.format(pool)));
+                    elementNode.addAttribute(
+                            new Attribute("index", String.valueOf(getEntry(entryMapName))));
+                    elementNode.addAttribute(new Attribute("value", formatValue(value)));
                     curNode.appendChild(elementNode);
                     break;
                 default:
                     Element valueNode = new Element("value");
-                    valueNode.addAttribute(new Attribute(
-                            "name", String.format("@%#08x", entryMapName)));
-                    valueNode.addAttribute(new Attribute(
-                            "value", value.format(pool))); // TODO?
+                    valueNode.addAttribute(new Attribute("name", entryMapName(entryMapName)));
+                    valueNode.addAttribute(new Attribute("value", formatValue(value))); // TODO?
                     curNode.appendChild(valueNode);
                     break;
             }
@@ -188,6 +194,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
 
     @Override
     public void onTableTypeSpecEnd() {
+        restypeId = 0;
         restypeName = null;
         curNode = (Element) curNode.getParent();
         super.onTableTypeSpecEnd();
@@ -195,6 +202,8 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
 
     @Override
     public void onTablePackageEnd() {
+        packageId = 0;
+        packageName = null;
         typePool = null;
         keyPool = null;
         curNode = (Element) curNode.getParent();
@@ -206,6 +215,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         document = new Document(curNode);
         curNode = null;
         pool = null;
+        resourceNames = null;
         super.onTableEnd();
     }
 
@@ -275,7 +285,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         switch (name) {
             case ATTR_TYPE:
                 node.addAttribute(new Attribute("allowedtypes",
-                        String.format("%#x", value.intValue())));
+                        String.format("%#x", value.intValue()))); // TODO: format
                 break;
             case ATTR_MIN:
                 node.addAttribute(new Attribute("minvalue", value.format(null)));
@@ -307,11 +317,55 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                 node.addAttribute(new Attribute("quantity", "many"));
                 break;
             default:
-                node.addAttribute(new Attribute("name",
-                        String.format("@%#08x", name)));
-                node.addAttribute(new Attribute("value",
-                        value.format(pool))); // TODO?
+                node.addAttribute(new Attribute("name", attrValueName(name)));
+                node.addAttribute(new Attribute("value", formatValue(value))); // TODO?
         }
         return node;
+    }
+
+    private String formatName(int resId) {
+        String name = resourceNames.get(resId);
+        if (name == null) {
+            name = String.format("@%#08x", resId); // TODO: android.R.attr
+        }
+        return name;
+    }
+
+    private String attrValueName(int resId) {
+        return formatName(resId);
+    }
+
+    private String entryMapName(int resId) {
+        return formatName(resId);
+    }
+
+    private String parentName(int parent) {
+        return formatName(parent);
+    }
+
+    public String formatValue(ResourceValue value) {
+        switch (value.type) {
+            case ResourceValue.TYPE_REFERENCE: {
+                int resId = value.intValue();
+                String name = resourceNames.get(resId);
+                if (name != null) {
+                    int typeId = ResourceUtils.getType(resId) + 1;
+                    String typeName = typePool.getString(typeId);
+                    return "@" + typeName + "/" + name;
+                }
+                break;
+            }
+            case ResourceValue.TYPE_ATTRIBUTE: {
+                int resId = value.intValue();
+                String name = resourceNames.get(resId);
+                if (name != null) {
+                    return "?" + name;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        return value.format(pool);
     }
 }
