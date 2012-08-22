@@ -119,4 +119,46 @@ public class ResourceUtils {
     // Enum of localization modes, for use with ATTR_L10N.
     public static final int ATTR_L10N_NOT_REQUIRED = 0;
     public static final int ATTR_L10N_SUGGESTED = 1;
+
+    private enum AllowedType {
+        REFERENCE(ATTR_TYPE_REFERENCE, "reference"),
+        STRING(ATTR_TYPE_STRING, "string"),
+        INTEGER(ATTR_TYPE_INTEGER, "integer"),
+        BOOLEAN(ATTR_TYPE_BOOLEAN, "boolean"),
+        COLOR(ATTR_TYPE_COLOR, "color"),
+        FLOAT(ATTR_TYPE_FLOAT, "float"),
+        DIMENSION(ATTR_TYPE_DIMENSION, "dimension"),
+        FRACTION(ATTR_TYPE_FRACTION, "fraction");
+
+        public final int flag;
+        public final String name;
+
+        AllowedType(int flag, String name) {
+            this.flag = flag;
+            this.name = name;
+        }
+    }
+
+    public static String formatAllowedTypes(int type) {
+        switch (type) {
+            case ATTR_TYPE_ANY:
+                return "any";
+            case ATTR_TYPE_ENUM:
+                return "enum";
+            case ATTR_TYPE_FLAGS:
+                return "flags";
+            default: {
+                StringBuilder sb = new StringBuilder();
+                for (AllowedType at : AllowedType.values()) {
+                    if ((type & at.flag) != 0) {
+                        if (sb.length() != 0) {
+                            sb.append('|');
+                        }
+                        sb.append(at.name);
+                    }
+                }
+                return sb.toString();
+            }
+        }
+    }
 }
