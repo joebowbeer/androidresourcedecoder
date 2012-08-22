@@ -285,7 +285,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         switch (name) {
             case ATTR_TYPE:
                 node.addAttribute(new Attribute("allowedtypes",
-                        String.format("%#x", value.intValue()))); // TODO: format
+                        ResourceUtils.formatAllowedTypes(value.intValue())));
                 break;
             case ATTR_MIN:
                 node.addAttribute(new Attribute("minvalue", value.format(null)));
