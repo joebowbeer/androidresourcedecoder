@@ -95,7 +95,7 @@ public class TableResourceMapper extends ContentFilter {
         itemName = keyPool.getString(key);
         isComplexEntry = isComplexEntry(flags);
         int resId = makeId(packageId - 1, typeSpecIndex - 1, id);
-        references.put(resId, itemName);
+        references.put(resId, restypeName + "/" + itemName);
         super.onTableEntryStart(id, flags, key, parent, count);
     }
 
