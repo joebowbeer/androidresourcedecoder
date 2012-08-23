@@ -127,7 +127,9 @@ public class Main {
         }
 
         if (resMapper != null) {
-            Log.i(resMapper.getReferences()); // TODO
+            for (Entry<Integer, String> entry : resMapper.getReferences().entrySet()) {
+                Log.i(String.format("%#08x=%s", entry.getKey().intValue(), entry.getValue())); // TODO
+            }
         }
 
         /* Apply edits */
