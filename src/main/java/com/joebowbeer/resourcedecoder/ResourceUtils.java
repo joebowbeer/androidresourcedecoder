@@ -130,11 +130,11 @@ public class ResourceUtils {
         DIMENSION(ATTR_TYPE_DIMENSION, "dimension"),
         FRACTION(ATTR_TYPE_FRACTION, "fraction");
 
-        public final int flag;
+        public final int value;
         public final String name;
 
-        AllowedType(int flag, String name) {
-            this.flag = flag;
+        AllowedType(int value, String name) {
+            this.value = value;
             this.name = name;
         }
     }
@@ -150,7 +150,7 @@ public class ResourceUtils {
             default: {
                 StringBuilder sb = new StringBuilder();
                 for (AllowedType at : AllowedType.values()) {
-                    if ((type & at.flag) != 0) {
+                    if ((type & at.value) != 0) {
                         if (sb.length() != 0) {
                             sb.append('|');
                         }

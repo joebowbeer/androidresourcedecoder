@@ -99,7 +99,9 @@ public class Main {
             handler = xmlMatcher = new XmlElementMatcher(xmlRemovals, handler);
         }
 
+        TableResourceMapper resMapper = null;
         if (dump) {
+            handler = resMapper = new TableResourceMapper(handler);
             handler = new TableContentToDocument(new XmlContentToDocument(handler));
         }
 
@@ -122,6 +124,10 @@ public class Main {
                     print(doc);
                 }
             }
+        }
+
+        if (resMapper != null) {
+            Log.i(resMapper.getReferences()); // TODO
         }
 
         /* Apply edits */

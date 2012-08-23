@@ -1,8 +1,5 @@
 package com.joebowbeer.resourcedecoder;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -18,6 +15,7 @@ import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_OTHER;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_TWO;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_TYPE;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_ZERO;
+import static com.joebowbeer.resourcedecoder.ResourceUtils.formatAllowedTypes;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.getEntry;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isArrayId;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
@@ -32,13 +30,9 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     private StringPool keyPool;
     private boolean hasTypePool;
     private boolean hasKeyPool;
-    private int packageId;
-    private String packageName;
-    private int restypeId;
     private String restypeName;
     private boolean isComplexEntry;
     private int entryMapName;
-    private Map<Integer, String> resourceNames;
 
     public TableContentToDocument() {
     }
@@ -60,7 +54,6 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     public void onTableStart(int packageCount) {
         document = null;
         curNode = new Element("packages");
-        resourceNames = new HashMap<>();
         super.onTableStart(packageCount);
     }
 
@@ -89,19 +82,17 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         Element packageNode = new Element("package");
         packageNode.addAttribute(new Attribute("id", String.format("%#x", id)));
         packageNode.addAttribute(new Attribute("name", name));
-        packageId = id;
-        packageName = name;
         hasTypePool = typeStrings != 0;
         hasKeyPool = keyStrings != 0;
         curNode.appendChild(packageNode);
         curNode = packageNode;
-        super.onTablePackageStart(id, name, typeStrings, lastPublicType, keyStrings, lastPublicKey);
+        super.onTablePackageStart(id, name, typeStrings,
+                lastPublicType, keyStrings, lastPublicKey);
     }
 
     @Override
     public void onTableTypeSpecStart(int id, int[] configs) {
         Element restypeNode = new Element("resourcetype");
-        restypeId = id;
         restypeNode.addAttribute(new Attribute("id", String.format("%#x", id)));
         restypeName = typePool.getString(curNode.getChildCount());
         restypeNode.addAttribute(new Attribute("name", restypeName));
@@ -131,10 +122,8 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
             itemNode.addAttribute(new Attribute("ispublic", "true"));
         }
         if (parent != 0) {
-            itemNode.addAttribute(new Attribute("parentref", parentName(parent)));
+            itemNode.addAttribute(new Attribute("parentref", formatName(parent)));
         }
-        int resId = ResourceUtils.makeId(packageId - 1, restypeId - 1, id);
-        resourceNames.put(resId, itemName);
         curNode.appendChild(itemNode);
         curNode = itemNode;
         super.onTableEntryStart(id, flags, key, parent, count);
@@ -154,7 +143,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
             return;
         }
         if (!isComplexEntry) {
-            curNode.addAttribute(new Attribute("value", formatValue(value)));
+            curNode.addAttribute(new Attribute("value", value.format(pool)));
         } else {
             switch (restypeName) {
                 case "attr":
@@ -165,13 +154,13 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                     Element elementNode = new Element("element");
                     elementNode.addAttribute(
                             new Attribute("index", String.valueOf(getEntry(entryMapName))));
-                    elementNode.addAttribute(new Attribute("value", formatValue(value)));
+                    elementNode.addAttribute(new Attribute("value", value.format(pool)));
                     curNode.appendChild(elementNode);
                     break;
                 default:
                     Element valueNode = new Element("value");
-                    valueNode.addAttribute(new Attribute("name", entryMapName(entryMapName)));
-                    valueNode.addAttribute(new Attribute("value", formatValue(value))); // TODO?
+                    valueNode.addAttribute(new Attribute("name", formatName(entryMapName)));
+                    valueNode.addAttribute(new Attribute("value", value.format(pool))); // TODO?
                     curNode.appendChild(valueNode);
                     break;
             }
@@ -194,7 +183,6 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
 
     @Override
     public void onTableTypeSpecEnd() {
-        restypeId = 0;
         restypeName = null;
         curNode = (Element) curNode.getParent();
         super.onTableTypeSpecEnd();
@@ -202,8 +190,6 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
 
     @Override
     public void onTablePackageEnd() {
-        packageId = 0;
-        packageName = null;
         typePool = null;
         keyPool = null;
         curNode = (Element) curNode.getParent();
@@ -215,7 +201,6 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         document = new Document(curNode);
         curNode = null;
         pool = null;
-        resourceNames = null;
         super.onTableEnd();
     }
 
@@ -234,8 +219,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
             node.addAttribute(new Attribute("country", config.country));
         }
         if (config.orientation != 0) {
-            node.addAttribute(new Attribute("orientation",
-                    String.valueOf(config.orientation)));
+            node.addAttribute(new Attribute("orientation", config.orientationQualifier()));
         }
         if (config.touchscreen != 0) {
             node.addAttribute(new Attribute("touchscreen",
@@ -266,16 +250,13 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                     String.valueOf(config.screenHeight)));
         }
         if (config.sdkVersion != 0) {
-            node.addAttribute(new Attribute("sdkversion",
-                    String.valueOf(config.sdkVersion)));
+            node.addAttribute(new Attribute("sdkversion", String.valueOf(config.sdkVersion)));
         }
         if (config.screenLayout != 0) {
-            node.addAttribute(new Attribute("screenLayout",
-                    String.valueOf(config.screenLayout)));
+            node.addAttribute(new Attribute("screenLayout", String.valueOf(config.screenLayout)));
         }
         if (config.uiMode != 0) {
-            node.addAttribute(new Attribute("uiMode",
-                    String.valueOf(config.uiMode)));
+            node.addAttribute(new Attribute("uiMode", String.valueOf(config.uiMode)));
         }
         return node;
     }
@@ -285,7 +266,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         switch (name) {
             case ATTR_TYPE:
                 node.addAttribute(new Attribute("allowedtypes",
-                        ResourceUtils.formatAllowedTypes(value.intValue())));
+                        formatAllowedTypes(value.intValue())));
                 break;
             case ATTR_MIN:
                 node.addAttribute(new Attribute("minvalue", value.format(null)));
@@ -317,55 +298,13 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                 node.addAttribute(new Attribute("quantity", "many"));
                 break;
             default:
-                node.addAttribute(new Attribute("name", attrValueName(name)));
-                node.addAttribute(new Attribute("value", formatValue(value))); // TODO?
+                node.addAttribute(new Attribute("name", formatName(name)));
+                node.addAttribute(new Attribute("value", value.format(pool))); // TODO?
         }
         return node;
     }
 
-    private String formatName(int resId) {
-        String name = resourceNames.get(resId);
-        if (name == null) {
-            name = String.format("@%#08x", resId); // TODO: android.R.attr
-        }
-        return name;
-    }
-
-    private String attrValueName(int resId) {
-        return formatName(resId);
-    }
-
-    private String entryMapName(int resId) {
-        return formatName(resId);
-    }
-
-    private String parentName(int parent) {
-        return formatName(parent);
-    }
-
-    public String formatValue(ResourceValue value) {
-        switch (value.type) {
-            case ResourceValue.TYPE_REFERENCE: {
-                int resId = value.intValue();
-                String name = resourceNames.get(resId);
-                if (name != null) {
-                    int typeId = ResourceUtils.getType(resId) + 1;
-                    String typeName = typePool.getString(typeId);
-                    return "@" + typeName + "/" + name;
-                }
-                break;
-            }
-            case ResourceValue.TYPE_ATTRIBUTE: {
-                int resId = value.intValue();
-                String name = resourceNames.get(resId);
-                if (name != null) {
-                    return "?" + name;
-                }
-                break;
-            }
-            default:
-                break;
-        }
-        return value.format(pool);
+    private String formatName(int name) {
+        return String.format("@%#08x", name); // TODO: android.R.attr
     }
 }

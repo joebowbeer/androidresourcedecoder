@@ -1,23 +1,17 @@
 package com.joebowbeer.resourcedecoder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
+import static com.joebowbeer.resourcedecoder.ResourceUtils.makeId;
 
 /**
- * ContentFilter that locates ResourceValue instances matched by one of a
- * given set of pattern strings. Patterns are of the form <b>name=value</b>,
- * for example: <b>R.color.background=#ff000000</b>.
+ * ContentFilter that maps resource ids to their names.
  */
-public class TableAttributeMatcher extends ContentFilter {
+public class TableResourceMapper extends ContentFilter {
 
-    private final Set<String> patterns;
-
-    private final Map<String, List<Long>> matches = new HashMap<>();
+    private final Map<Integer, String> references = new HashMap<>();
 
     private boolean tableStarted;
     private StringPool pool;
@@ -25,6 +19,7 @@ public class TableAttributeMatcher extends ContentFilter {
     private boolean hasKeyPool;
     private StringPool typePool;
     private StringPool keyPool;
+    private int packageId;
     private String packageName;
     private int typeSpecIndex;
     private String restypeName;
@@ -32,21 +27,15 @@ public class TableAttributeMatcher extends ContentFilter {
     private String itemName;
     private boolean isComplexEntry;
 
-    public TableAttributeMatcher(Set<String> patterns) {
-        this.patterns = patterns;
+    public TableResourceMapper() {
     }
 
-    public TableAttributeMatcher(Set<String> patterns, ContentHandler parent) {
+    public TableResourceMapper(ContentHandler parent) {
         super(parent);
-        this.patterns = patterns;
     }
 
-    public Set<String> getPatterns() {
-        return patterns;
-    }
-
-    public Map<String, List<Long>> getMatches() {
-        return matches;
+    public Map<Integer, String> getReferences() {
+        return references;
     }
 
     /* ContentFilter overrides */
@@ -79,6 +68,7 @@ public class TableAttributeMatcher extends ContentFilter {
     @Override
     public void onTablePackageStart(int id, String name, int typeStrings,
             int lastPublicType, int keyStrings, int lastPublicKey) {
+        packageId = id;
         packageName = name;
         hasTypePool = typeStrings != 0;
         hasKeyPool = keyStrings != 0;
@@ -104,24 +94,9 @@ public class TableAttributeMatcher extends ContentFilter {
             int count) {
         itemName = keyPool.getString(key);
         isComplexEntry = isComplexEntry(flags);
+        int resId = makeId(packageId - 1, typeSpecIndex - 1, id);
+        references.put(resId, itemName);
         super.onTableEntryStart(id, flags, key, parent, count);
-    }
-
-    @Override
-    public void onResourceValue(long offset, ResourceValue value) {
-        assert offset == (int) offset;
-        if (tableStarted &&  !isComplexEntry) {
-            String name = "R." + restypeName + "." + itemName;
-            if (patterns.contains(name)) {
-                List<Long> list = matches.get(name);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    matches.put(name, list);
-                }
-                list.add(offset);
-            }
-        }
-        super.onResourceValue(offset, value);
     }
 
     @Override
@@ -144,10 +119,11 @@ public class TableAttributeMatcher extends ContentFilter {
 
     @Override
     public void onTablePackageEnd() {
+        packageId = 0;
+        packageName = null;
         typeSpecIndex = 0;
         typePool = null;
         keyPool = null;
-        packageName = null;
         super.onTablePackageEnd();
     }
 
