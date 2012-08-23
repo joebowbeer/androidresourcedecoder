@@ -81,4 +81,13 @@ public class ResourceConfig {
                 | screenWidth | screenHeight
                 | sdkVersion | screenLayout | uiMode) == 0;
     }
+
+    public String orientationQualifier() {
+        switch (orientation) {
+            case 1: return "port";
+            case 2: return "land";
+            default:
+                throw new IllegalStateException(String.valueOf(orientation));
+        }
+    }
 }
