@@ -166,6 +166,8 @@ public class ResourceUtils {
         switch (quantityId) {
             case ATTR_OTHER:
                 return "other";
+            case ATTR_ZERO:
+                return "zero";
             case ATTR_ONE:
                 return "one";
             case ATTR_TWO:
