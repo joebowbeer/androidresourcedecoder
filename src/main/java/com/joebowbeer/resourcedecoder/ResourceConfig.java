@@ -82,12 +82,32 @@ public class ResourceConfig {
                 | sdkVersion | screenLayout | uiMode) == 0;
     }
 
+    public String densityQualifier() {
+        // TODO: tvdpi 
+        switch (density) {
+            case 0xffff:
+                return "nodpi";
+            case 120:
+                return "ldpi";
+            case 160:
+                return "mdpi";
+            case 240:
+                return "hdpi";
+            case 320:
+                return "xhdpi";
+            default:
+                return String.valueOf(density);
+        }
+    }
+
     public String orientationQualifier() {
         switch (orientation) {
-            case 1: return "port";
-            case 2: return "land";
+            case 1:
+                return "port";
+            case 2:
+                return "land";
             default:
-                throw new IllegalStateException(String.valueOf(orientation));
+                return String.valueOf(orientation);
         }
     }
 }

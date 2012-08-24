@@ -54,6 +54,7 @@ public class TableAttributeMatcher extends ContentFilter {
     @Override
     public void onTableStart(int packageCount) {
         tableStarted = true;
+        matches.clear();
         super.onTableStart(packageCount);
     }
 
