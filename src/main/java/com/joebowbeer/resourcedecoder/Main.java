@@ -215,12 +215,12 @@ public class Main {
 
     protected static class TableSerializer extends Serializer {
 
-        private final Map<Integer, String> ids;
-        private final Set<Integer> refs; // TODO!
+        private final Map<String, String> ids;
+        private final Set<String> refs; // TODO!
 
         public TableSerializer(TableContentToDocument handler, OutputStream out) {
             super(out);
-            ids = new HashMap(handler.getIdentifiers());
+            ids = new HashMap(handler.getDeclarations());
             refs = new HashSet(handler.getReferences());
             // prune identifiers
             ids.keySet().retainAll(refs); // referenced identifiers
@@ -229,44 +229,34 @@ public class Main {
 
         @Override
         protected void write(Attribute attr) throws IOException {
-            super.write(replaceName(replaceValue(attr)));
-        }
-
-        protected Attribute replaceName(Attribute attr) {
-            String name = attr.getLocalName();
-            if (name.startsWith("0x") && name.length() == 10) {
-                try {
-                    String resolved = ids.get(Integer.decode(name));
-                    if (resolved != null) {
-                        attr = new Attribute(attr);
-                        attr.setLocalName(resolved);
-                    }
-                } catch (NumberFormatException ex) {
-                    // fall through
-                }
-            }
-            return attr;
+            super.write(replaceValue(attr));
         }
 
         protected Attribute replaceValue(Attribute attr) {
             String value = attr.getValue();
             String prefix = "";
-            if (value.startsWith("@") || value.startsWith("?")) {
+            if (value.startsWith("@") || value.startsWith("?") || value.startsWith("$")) {
                 prefix = value.substring(0, 1);
                 value = value.substring(1);
             }
-            if (value.startsWith("0x") && value.length() == 10) {
-                try {
-                    String resolved = ids.get(Integer.decode(value));
-                    if (resolved != null) {
-                        attr = new Attribute(attr);
+            if (value.startsWith("0x")) {
+                String resolved = ids.get(value);
+                if (resolved != null) {
+                    attr = new Attribute(attr);
+                    if ("$".equals(prefix)) {
+                        attr.setValue(trimType(resolved));
+                    } else {
                         attr.setValue(prefix + resolved);
                     }
-                } catch (NumberFormatException ex) {
-                    // fall through
                 }
             }
             return attr;
+        }
+
+        protected static String trimType(String s) {
+            int colon = s.indexOf(':') + 1;
+            int slash = s.indexOf('/') + 1;
+            return s.substring(0, colon) + s.substring(slash);
         }
     }
 

@@ -83,18 +83,19 @@ public class ResourceConfig {
     }
 
     public String densityQualifier() {
-        // TODO: tvdpi 
         switch (density) {
-            case 0xffff:
-                return "nodpi";
             case 120:
                 return "ldpi";
             case 160:
                 return "mdpi";
+            case 213:
+                return "tvdpi";
             case 240:
                 return "hdpi";
             case 320:
                 return "xhdpi";
+            case 0xffff:
+                return "nodpi";
             default:
                 return String.valueOf(density);
         }
