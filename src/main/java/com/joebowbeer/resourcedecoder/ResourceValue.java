@@ -109,9 +109,9 @@ public class ResourceValue {
             case TYPE_NULL:
                 return ""; // TODO?
             case TYPE_REFERENCE:
-                return String.format("@%#08x", intValue());
+                return String.format("@%#010x", intValue());
             case TYPE_ATTRIBUTE:
-                return String.format("?%#08x", intValue());
+                return String.format("?%#010x", intValue());
             case TYPE_STRING:
                 return pool.getString(intValue()); // TODO?
             case TYPE_FLOAT:

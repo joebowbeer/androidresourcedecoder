@@ -3,13 +3,17 @@ package com.joebowbeer.resourcedecoder;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Serializer;
 
@@ -99,9 +103,7 @@ public class Main {
             handler = xmlMatcher = new XmlElementMatcher(xmlRemovals, handler);
         }
 
-        TableResourceMapper resMapper = null;
         if (dump) {
-            handler = resMapper = new TableResourceMapper(handler);
             handler = new TableContentToDocument(new XmlContentToDocument(handler));
         }
 
@@ -116,19 +118,21 @@ public class Main {
             in.close();
         }
 
-        // dump resources
+        /* Dump */
+
         for (; handler != null; handler = ((ContentFilter) handler).getParent()) {
             if (handler instanceof DocumentBuilder) {
                 Document doc = ((DocumentBuilder) handler).toDocument();
                 if (doc != null) {
-                    print(doc);
+                    OutputStream os = System.out;
+                    Serializer output = (handler instanceof TableContentToDocument)
+                            ? new TableSerializer((TableContentToDocument) handler, os)
+                            : new Serializer(os);
+                    output.setIndent(4);
+                    output.setMaxLength(72);
+                    output.write(doc);
+                    output.flush();
                 }
-            }
-        }
-
-        if (resMapper != null) {
-            for (Entry<Integer, String> entry : resMapper.getReferences().entrySet()) {
-                Log.i(String.format("%#08x=%s", entry.getKey().intValue(), entry.getValue())); // TODO
             }
         }
 
@@ -209,12 +213,61 @@ public class Main {
         Log.i("Success");
     }
 
-    private static void print(Document doc) throws IOException {
-        Serializer output = new Serializer(System.out);
-        output.setIndent(4);
-        output.setMaxLength(64);
-        output.write(doc);
-        output.flush();
+    protected static class TableSerializer extends Serializer {
+
+        private final Map<Integer, String> ids;
+        private final Set<Integer> refs; // TODO!
+
+        public TableSerializer(TableContentToDocument handler, OutputStream out) {
+            super(out);
+            ids = new HashMap(handler.getIdentifiers());
+            refs = new HashSet(handler.getReferences());
+            // prune identifiers
+            ids.keySet().retainAll(refs); // referenced identifiers
+            refs.removeAll(ids.keySet()); // android references
+        }
+
+        @Override
+        protected void write(Attribute attr) throws IOException {
+            super.write(replaceName(replaceValue(attr)));
+        }
+
+        protected Attribute replaceName(Attribute attr) {
+            String name = attr.getLocalName();
+            if (name.startsWith("0x") && name.length() == 10) {
+                try {
+                    String resolved = ids.get(Integer.decode(name));
+                    if (resolved != null) {
+                        attr = new Attribute(attr);
+                        attr.setLocalName(resolved);
+                    }
+                } catch (NumberFormatException ex) {
+                    // fall through
+                }
+            }
+            return attr;
+        }
+
+        protected Attribute replaceValue(Attribute attr) {
+            String value = attr.getValue();
+            String prefix = "";
+            if (value.startsWith("@") || value.startsWith("?")) {
+                prefix = value.substring(0, 1);
+                value = value.substring(1);
+            }
+            if (value.startsWith("0x") && value.length() == 10) {
+                try {
+                    String resolved = ids.get(Integer.decode(value));
+                    if (resolved != null) {
+                        attr = new Attribute(attr);
+                        attr.setValue(prefix + resolved);
+                    }
+                } catch (NumberFormatException ex) {
+                    // fall through
+                }
+            }
+            return attr;
+        }
     }
 
     /* little-endian conversion */
