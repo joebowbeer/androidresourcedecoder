@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
 import com.joebowbeer.resourcedecoder.StringPool.Style;
+
+import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
 
 /**
  * Decodes compiled resources or xml.

@@ -161,4 +161,21 @@ public class ResourceUtils {
             }
         }
     }
+
+    public static String formatQuantity(int quantityId) {
+        switch (quantityId) {
+            case ATTR_OTHER:
+                return "other";
+            case ATTR_ONE:
+                return "one";
+            case ATTR_TWO:
+                return "two";
+            case ATTR_FEW:
+                return "few";
+            case ATTR_MANY:
+                return "many";
+            default:
+                throw new IllegalArgumentException(String.valueOf(quantityId));
+        }
+    }
 }
