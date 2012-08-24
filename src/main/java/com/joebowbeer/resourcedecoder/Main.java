@@ -126,7 +126,7 @@ public class Main {
                 if (doc != null) {
                     OutputStream os = System.out;
                     Serializer output = (handler instanceof TableContentToDocument)
-                            ? new TableSerializer((TableContentToDocument) handler, os)
+                            ? createSerializer((TableContentToDocument) handler, os)
                             : new Serializer(os);
                     output.setIndent(4);
                     output.setMaxLength(72);
@@ -213,18 +213,30 @@ public class Main {
         Log.i("Success");
     }
 
+    protected static Serializer createSerializer(TableContentToDocument handler, OutputStream out)
+            throws IOException {
+        Map<String, String> map = new HashMap<>(handler.getDeclarations()); // clone
+        // load android.R.* identifiers
+        Properties props = new Properties();
+        props.load(Main.class.getResourceAsStream("/android.properties"));
+        for (String key : props.stringPropertyNames()) {
+            map.put(key, props.getProperty(key));
+        }
+        Set<String> unresolved = new HashSet(handler.getReferences()); // clone
+        unresolved.removeAll(map.keySet());
+        if (!unresolved.isEmpty()) {
+            Log.i("Unresolved resource ids: " + unresolved);
+        }
+        return new TableSerializer(map, out);
+    }
+
     protected static class TableSerializer extends Serializer {
 
-        private final Map<String, String> ids;
-        private final Set<String> refs; // TODO!
+        private final Map<String, String> map;
 
-        public TableSerializer(TableContentToDocument handler, OutputStream out) {
+        public TableSerializer(Map<String, String> map, OutputStream out) {
             super(out);
-            ids = new HashMap(handler.getDeclarations());
-            refs = new HashSet(handler.getReferences());
-            // prune identifiers
-            ids.keySet().retainAll(refs); // referenced identifiers
-            refs.removeAll(ids.keySet()); // android references
+            this.map = map;
         }
 
         @Override
@@ -240,7 +252,7 @@ public class Main {
                 value = value.substring(1);
             }
             if (value.startsWith("0x")) {
-                String resolved = ids.get(value);
+                String resolved = map.get(value);
                 if (resolved != null) {
                     attr = new Attribute(attr);
                     if ("$".equals(prefix)) {
