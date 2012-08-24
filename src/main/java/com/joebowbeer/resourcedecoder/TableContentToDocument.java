@@ -21,9 +21,11 @@ import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_TWO;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_TYPE;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.ATTR_ZERO;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.formatAllowedTypes;
+import static com.joebowbeer.resourcedecoder.ResourceUtils.formatQuantity;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.getEntry;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isArrayId;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isComplexEntry;
+import static com.joebowbeer.resourcedecoder.ResourceUtils.isInternalId;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.isPublicEntry;
 import static com.joebowbeer.resourcedecoder.ResourceUtils.makeId;
 import static com.joebowbeer.resourcedecoder.ResourceValue.TYPE_ATTRIBUTE;
@@ -190,7 +192,15 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
                     curNode.appendChild(elementNode);
                     break;
                 }
-                default: {
+                case "plurals": {
+                    assert isInternalId(entryMapName);
+                    Element elementNode = new Element("quantity");
+                    elementNode.addAttribute(new Attribute("name", formatQuantity(entryMapName)));
+                    elementNode.addAttribute(new Attribute("value", formatValue(value)));
+                    curNode.appendChild(elementNode);
+                    break;
+                }
+                default: { // TODO?
                     Element valueNode = new Element("value");
                     valueNode.addAttribute(new Attribute("name", formatName(entryMapName)));
                     valueNode.addAttribute(new Attribute("value", formatValue(value)));
