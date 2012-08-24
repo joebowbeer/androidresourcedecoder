@@ -31,8 +31,10 @@ import static com.joebowbeer.resourcedecoder.ResourceValue.TYPE_REFERENCE;
 
 public class TableContentToDocument extends ContentFilter implements DocumentBuilder {
 
-    private final Map<Integer, String> identifiers = new HashMap<>();
-    private final Set<Integer> references = new HashSet<>();
+    private static final String FORMAT = "%#010x"; // 0x12345678
+
+    private final Map<String, String> declarations = new HashMap<>();
+    private final Set<String> references = new HashSet<>();
 
     private Document document;
     private Element curNode;
@@ -56,11 +58,11 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         super(parent);
     }
 
-    public Map<Integer, String> getIdentifiers() {
-        return identifiers;
+    public Map<String, String> getDeclarations() {
+        return declarations;
     }
 
-    public Set<Integer> getReferences() {
+    public Set<String> getReferences() {
         return references;
     }
 
@@ -76,7 +78,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     @Override
     public void onTableStart(int packageCount) {
         document = null;
-        identifiers.clear();
+        declarations.clear();
         references.clear();
         curNode = new Element("packages");
         super.onTableStart(packageCount);
@@ -154,9 +156,7 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
         }
         curNode.appendChild(itemNode);
         curNode = itemNode;
-        // collect identifier
-        int resId = makeId(packageId - 1, typeSpecIndex - 1, id);
-        identifiers.put(resId, restypeName + "/" + itemName);
+        declareId(makeId(packageId - 1, typeSpecIndex - 1, id), restypeName, itemName);
         super.onTableEntryStart(id, flags, key, parent, count);
     }
 
@@ -334,9 +334,9 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
             case ATTR_MANY:
                 node.addAttribute(new Attribute("quantity", "many"));
                 break;
-            default:
+            default: // TODO?
                 node.addAttribute(new Attribute("name", formatName(name)));
-                node.addAttribute(new Attribute("value", formatValue(value))); // TODO?
+                node.addAttribute(new Attribute("value", formatValue(value)));
         }
         return node;
     }
@@ -356,20 +356,28 @@ public class TableContentToDocument extends ContentFilter implements DocumentBui
     }
 
     private String formatAttribute(int resId) {
-        references.add(resId);
-        return String.format("?%#010x", resId);
+        return "?" + referenceId(resId);
     }
 
     private String formatReference(int resId) {
         if (resId == 0) {
             return "@null";
         }
-        references.add(resId);
-        return String.format("@%#010x", resId);
+        return "@" + referenceId(resId);
     }
 
     private String formatName(int resId) {
-        references.add(resId);
-        return String.format("%#010x", resId);
+        return "$" + referenceId(resId);
+    }
+
+    private String referenceId(int resId) {
+        String idString = String.format(FORMAT, resId);
+        references.add(idString);
+        return idString;
+    }
+
+    private void declareId(int resId, String restypeName, String itemName) {
+        String idString = String.format(FORMAT, resId);
+        declarations.put(idString, restypeName + "/" + itemName);
     }
 }

@@ -226,8 +226,7 @@ public class ResourceValue {
     }
 
     private static int parseBoolean(String bool) {
-        // TODO: canonical encoding of false is -1?
-        return Boolean.parseBoolean(bool) ? -1 : 0;
+        return Boolean.parseBoolean(bool) ? 1 : 0;
     }
 
     private static int parseColor(String color) {
