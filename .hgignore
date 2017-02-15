@@ -6,3 +6,6 @@
 ^target$
 ^dependency-reduced-pom\.xml$
 ^\.gradle$
+syntax: glob
+build/
+.nb-gradle/
