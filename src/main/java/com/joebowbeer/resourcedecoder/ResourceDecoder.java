@@ -49,6 +49,7 @@ public class ResourceDecoder {
   public static final int TYPE_TABLE_PACKAGE = 0x0200;
   public static final int TYPE_TABLE_TYPE = 0x0201;
   public static final int TYPE_TABLE_TYPE_SPEC = 0x0202;
+  public static final int TYPE_TABLE_LIBRARY = 0x0203;
 
   //private static final int XML_FIRST_CHUNK_TYPE = 0x0100;
   //private static final int XML_LAST_CHUNK_TYPE = 0x017f;
@@ -121,6 +122,7 @@ public class ResourceDecoder {
       case TYPE_TABLE_TYPE_SPEC:
         decodeTableTypeSpec(headerSize, totalSize, in);
         break;
+      case TYPE_TABLE_LIBRARY: // TODO
       default:
         decodeUnknownType(type, headerSize, totalSize, in);
     }
@@ -528,6 +530,8 @@ public class ResourceDecoder {
         return "TABLE_TYPE";
       case TYPE_TABLE_TYPE_SPEC:
         return "TABLE_TYPE_SPEC";
+      case TYPE_TABLE_LIBRARY:
+        return "TABLE_LIBRARY";
       default:
         return String.format("UNKNOWN(%#x)", type);
     }
