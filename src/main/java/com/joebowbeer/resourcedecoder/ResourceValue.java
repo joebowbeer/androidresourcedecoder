@@ -7,6 +7,7 @@ import java.io.OutputStream;
 public class ResourceValue {
 
   /* The types of values. */
+
   // Contains no data.
   public static final int TYPE_NULL = 0x00;
 
@@ -30,7 +31,16 @@ public class ResourceValue {
   // The 'data' holds a complex number encoding a fraction of a container.
   public static final int TYPE_FRACTION = 0x06;
 
+  // The 'data' holds a dynamic ResTable_ref, which needs to be
+  // resolved before it can be used like a TYPE_REFERENCE.
+  public static final int TYPE_DYNAMIC_REFERENCE = 0x07;
+
+  // The 'data' holds an attribute resource identifier, which needs to be resolved
+  // before it can be used like a TYPE_ATTRIBUTE.
+  public static final int TYPE_DYNAMIC_ATTRIBUTE = 0x08;
+
   /* integer flavors */
+
   // The 'data' is a raw integer value of the form n..n.
   public static final int TYPE_INT_DEC = 0x10;
 
@@ -41,6 +51,7 @@ public class ResourceValue {
   public static final int TYPE_INT_BOOLEAN = 0x12;
 
   /* integer color flavors */
+
   // The 'data' is a raw integer value of the form #aarrggbb.
   public static final int TYPE_INT_COLOR_ARGB8 = 0x1c;
 
@@ -82,6 +93,10 @@ public class ResourceValue {
         return "DIMEN";
       case TYPE_FRACTION:
         return "FRACTION";
+      case TYPE_DYNAMIC_REFERENCE:
+        return "DYNAMIC_REFERENCE";
+      case TYPE_DYNAMIC_ATTRIBUTE:
+        return "DYNAMIC_ATTRIBUTE";
       case TYPE_INT_DEC:
         return "DEC";
       case TYPE_INT_HEX:
@@ -129,6 +144,8 @@ public class ResourceValue {
       case TYPE_INT_COLOR_RGB8:
       case TYPE_INT_COLOR_RGB4:
         return String.format("#%06x", intValue());
+      case TYPE_DYNAMIC_REFERENCE: // TODO
+      case TYPE_DYNAMIC_ATTRIBUTE: // TODO
       default:
         return String.format("%#x", intValue());
     }
@@ -186,6 +203,7 @@ public class ResourceValue {
   };
 
   /* Encoders */
+
   public static byte[] encode(String name, String value) throws IOException {
     int type = typeFromName(name);
     int size = 8;
